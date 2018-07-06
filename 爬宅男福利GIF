@@ -1,0 +1,49 @@
+# coding: utf-8
+import requests
+import re
+
+def gethtmltext(url):
+    r = requests.get(url)
+    r.encoding = r.apparent_encoding
+    return r.text
+
+def getgif(html):
+    reg = r'<img src=".*?" alt=".*?">'
+    giflist = re.findall(reg,html)
+    downloadlist = []
+    for each in giflist:
+        e = each.split('"')[1]
+        downloadlist.append(e)
+    return downloadlist
+
+def getnamelist(html):
+    reg = r'<a href=".*?" title=".*?" class=".*?">'
+    namelist = re.findall(reg,html)
+    namelist_store = []
+    for each in namelist:
+        namelist_store.append(each.split('"')[3])
+    return namelist_store
+
+def downloadgifs(namelist,giflist):
+    i = 0
+    for each_url in giflist:
+        url = each_url
+        root = 'E:\学习\爬虫\default\爬虫\吹牛逼练习\gif\gif'
+        path =  root + namelist[i]
+        i = i+1
+        try:
+            r = requests.get(each_url)
+            with open(path,'wb') as f:
+                f.write(r.content)
+                print('Save')
+        except:
+            continue
+
+def main():
+    url = 'https://www.zhainanfulishe.com/tag/gif出处'
+    html = gethtmltext(url)
+    giflist = getgif(html)
+    namelist = getnamelist(html)
+    downloadgifs(namelist,giflist)
+
+main()
