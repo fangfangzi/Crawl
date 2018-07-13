@@ -1,0 +1,498 @@
+
+# coding: utf-8
+
+# In[1]:
+
+
+import requests
+import os
+from bs4 import BeautifulSoup
+import re
+import bs4
+import pandas as pd
+import numpy as np
+from pandas import DataFrame
+import scrapy
+from selenium import webdriver
+
+
+# In[38]:
+
+
+url = 'http://www.baidu.comn/'
+
+
+# In[34]:
+
+
+try : 
+    r = requests.get(url,headers = kv)
+    r.raise_for_status()
+    r.encoding = r.apparent_encoding
+    print(r.status_code)
+    print(r.encoding)
+except:
+    print('爬取错误')
+
+
+# In[41]:
+
+
+keyword = 'Python'
+
+
+# In[42]:
+
+
+try:
+    kv = {'wd':keyword}
+    r = requests.get('http://www.baidu.com/s',params = kv)
+    print(r.request.url)
+    r.raise_for_status()
+    print(len(r.text))
+except:
+    print('faile')
+
+
+# In[67]:
+
+
+url = 'http://img0.dili360.com/rw17/ga/M01/4A/60/wKgBy1qo8j2AJ-ASAAeJJUbGqDQ060.tub.jpg'
+root = 'E:\学习\爬虫\图片\图片'
+path = root + url.split('/')[-1]
+
+
+# In[68]:
+
+
+try:
+    if not os.path.exists(root):
+        os.mkdir(root)
+    if not os.path.exists(path):
+        r = requests.get(url)
+        with open(path,'wb') as f:
+            f.write(r.content)
+            print('Save')
+    else:
+        print('File exists')
+except:
+    print('爬取失败')
+
+
+# In[26]:
+
+
+r = requests.get('http://python123.io/ws/demo.html')
+
+
+# In[27]:
+
+
+r.text
+
+
+# In[28]:
+
+
+demo = r.text
+
+
+# In[29]:
+
+
+soup = BeautifulSoup(demo,'html.parser')
+
+
+# In[6]:
+
+
+soup.title
+
+
+# In[7]:
+
+
+tag = soup.a
+
+
+# In[8]:
+
+
+tag
+
+
+# In[9]:
+
+
+soup.a.parent.name
+
+
+# In[10]:
+
+
+tag.attrs
+
+
+# In[11]:
+
+
+tag.attrs['class']
+
+
+# In[12]:
+
+
+tag.attrs['href']
+
+
+# In[13]:
+
+
+soup.a.string
+
+
+# In[14]:
+
+
+soup.p.string
+
+
+# In[15]:
+
+
+soup.head.contents
+
+
+# In[24]:
+
+
+for parent in soup.a.parents:
+    if parent is None:
+        print(parent)
+    else:
+        print(parent.name)
+
+
+# In[19]:
+
+
+print(soup.a.prettify)
+
+
+# In[20]:
+
+
+soup.a.prettify
+
+
+# In[31]:
+
+
+for link in soup.find_all('a'):
+    print(link.get('href'))
+
+
+# In[26]:
+
+
+soup.find_all(['a','b'])
+
+
+# In[28]:
+
+
+for tag in soup.find_all(True):
+    print(tag.name)
+
+
+# In[32]:
+
+
+soup.find_all(id = 'link1')
+
+
+# In[33]:
+
+
+soup.find_all('p','course')
+
+
+# In[35]:
+
+
+soup.find_all(string = re.compile('Python'))
+
+
+# In[36]:
+
+
+soup(string = re.compile('Python'))
+
+
+# In[2]:
+
+
+def GetHTMLtext(url):
+    try:
+        r = requests.get(url,timeout = 30)
+        r.raise_for_status()
+        r.encoding = r.apparent_encoding
+        return r.text
+    except:
+        print('错误')
+
+
+# In[58]:
+
+
+def filllist(ulist,html):
+    soup = BeautifulSoup(html,'html.parser')
+    ulist = []
+    for tr in soup.findChildren('tbody'):
+        if isinstance(tr,bs4.element.Tag):
+            tds = tr('td')
+            for i in range(len(tds)):
+                try:            
+                    ulist.append([tds[5*i].string, tds[5*i+1].string, tds[5*i+2].string])
+                except:
+                    pass
+    return ulist
+
+
+# In[84]:
+
+
+def main():
+    url = 'http://www.zuihaodaxue.cn/shengyuanzhiliangpaiming2018.html'
+    html = GetHTMLtext(url)
+    ulist = []
+    ulist = filllist(ulist,html)
+    arr = np.array(ulist)
+    df = DataFrame(arr)
+    df.columns = ['排名','学校名称','所在城市']
+    df.set_index('排名',inplace=True)
+    return df
+
+
+# In[96]:
+
+
+ls = re.findall(r'[1-9]\d{5}','BIT 100081 Tsu 100084')
+
+
+# In[97]:
+
+
+ls
+
+
+# In[101]:
+
+
+re.split(r'[1-9]\d{5}','BIT 100081 TSU 100084',maxsplit=3)
+
+
+# In[106]:
+
+
+match = re.search(r'[1-9]\d{5}','BIT 100081 Tsu 100084')
+
+
+# In[110]:
+
+
+match.group(0)
+
+
+# In[113]:
+
+
+regex = re.compile('10081')
+
+
+# In[114]:
+
+
+regex
+
+
+# In[5]:
+
+
+def Gethtmltext(url):
+    try:        
+        r = requests.get(url)
+        r.raise_for_status()
+        r.encoding = r.apparent_encoding
+        return r.text
+    except:
+        print("Wrong")
+
+
+# In[11]:
+
+
+def parsePgage(ilt,html):
+    try:
+        plt = re.findall(r'"view_price":"[\d.]*"',html)
+        tlt = re.findall(r'"raw_title":".*?"',html)
+        for i in range(len(plt)):
+            price = eval(plt[i].split(':')[1])
+            title = eval(tlt[i].split(':')[1])
+            ilt.append([price,title])
+    except:
+        pass
+    return ilt
+
+
+# In[10]:
+
+
+def printlist(ilt):
+    pass
+
+
+# In[65]:
+
+
+def main():
+    depth = 5
+    infolist = []
+    star_url = 'https://s.taobao.com/search?q=' + '书包'
+    for i in range(depth):    
+        try:
+                url = star_url + '&s=' + str(44*i)
+                html = Gethtmltext(url)
+                infolist = parsePgage(infolist,html)
+        except:
+            continue
+    arr = np.array(infolist) 
+    df = DataFrame(arr)
+    df.columns = ['价格','品牌']
+    return df
+
+
+# In[8]:
+
+
+session = requests.Session()
+
+
+# In[9]:
+
+
+payload = {'username':'Morvan','password':'password'}
+
+
+# In[18]:
+
+
+r = session.post('http://pythonscraping.com/pages/cookies/welcome.php',data=payload)
+
+
+# In[19]:
+
+
+r.cookies.get_dict()
+
+
+# In[15]:
+
+
+r = session.get('http://pythonscraping.com/pages/cookies/profile.php')
+
+
+# In[16]:
+
+
+print(r.text)
+
+
+# In[20]:
+
+
+from urllib.request import urlretrieve
+
+
+# In[34]:
+
+
+root = 'E:\学习\爬虫\default\爬虫\图片\\'
+path = root + 'image2' + '.jpg'
+
+
+# In[35]:
+
+
+urlretrieve('http://img0.dili360.com/rw17/ga/M01/4A/60/wKgBy1qo8j2AJ-ASAAeJJUbGqDQ060.tub.jpg',path)
+
+
+# In[32]:
+
+
+print(path)
+
+
+# In[6]:
+
+
+driver = webdriver.Firefox()
+driver.get("https://www.bilibili.com/")
+driver.find_element_by_link_text(u"登录").click()
+driver.find_element_by_id("login-username").click()
+driver.find_element_by_id("login-passwd").clear()
+driver.find_element_by_id("login-passwd").send_keys("xx971112")
+driver.find_element_by_xpath("//div[@id='gc-box']/div/div[3]/div[2]").click()
+driver.find_element_by_link_text(u"登录").click()
+driver.find_element_by_link_text(u"收藏夹").click()
+
+
+# In[7]:
+
+
+def get_auth_code(driver,codeEelement):
+    '''获取验证码'''
+    driver.save_screenshot('login/login.png')  #截取登录页面
+    imgSize = codeEelement.size   #获取验证码图片的大小
+    imgLocation = imgElement.location #获取验证码元素坐标
+    rangle = (int(imgLocation['x']),int(imgLocation['y']),int(imgLocation['x'] + imgSize['width']),int(imgLocation['y']+imgSize['height']))  #计算验证码整体坐标
+    login = Image.open("login/login.png")  
+    frame4=login.crop(rangle)   #截取验证码图片
+    frame4.save('login/authcode.png')
+    authcodeImg = Image.open('login/authcode.png')
+    authCodeText = pytesseract.image_to_string(authcodeImg).strip()
+    return authCodeText
+
+
+# In[8]:
+
+
+def pandarola_login(driver,account,passwd,authCode):
+    '''登录pandarola系统'''
+    driver.find_element_by_id('loginname').send_keys(account)
+    driver.find_element_by_id('password').send_keys(passwd)
+    driver.find_element_by_id('code').send_keys(authCode)
+    driver.find_element_by_id('to-recover').click()
+    time.sleep(2)
+    title = driver.find_element_by_id('menuName-h').text  #获取登录的标题
+    '''验证是否登录成功'''
+    try:
+        assert title == u'桌面'
+        return '登录成功'
+    except AssertionError as e:
+        return '登录失败'
+
+
+# In[9]:
+
+
+if __name__ == '__main__':
+
+    driver = webdriver.Chrome()
+    driver.get('http://pandarola.pandadata.cn')
+    driver.maximize_window()
+    imgElement = driver.find_element_by_id('codeImg')
+    authCodeText = get_auth_code(driver,imgElement)
+    pandarola_login(driver,'admin','1',authCodeText)
+    driver.quit()
+
