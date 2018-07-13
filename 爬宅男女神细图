@@ -1,0 +1,104 @@
+
+# coding: utf-8
+
+# In[1]:
+
+
+import re
+import requests
+from bs4 import BeautifulSoup
+import multiprocessing as mp
+from urllib.request import urlretrieve
+
+
+# In[5]:
+
+
+depth = 10
+
+
+# In[3]:
+
+# In[ ]:
+
+# In[3]:
+
+def gethtmls(url):
+    try:
+        r =requests.get(url)
+        r.encoding = r.apparent_encoding
+        return r.text
+    except:
+        print('爬取网页内容失败')
+
+
+# In[107]:
+
+
+def get_preview_list():
+    preview_urls_list = []
+    for i in range(depth):
+        url = 'https://www.zhainanfulishe.com/nvshen/' + 'page/' + str(i+1)
+        preview_urls_list.append(url)
+    return preview_urls_list
+
+
+# In[62]:
+
+
+def getdetailedurls(preview_urls_list):
+    detailed_urls_list = []
+    for url in preview_urls_list:        
+        try:
+            html = gethtmls(url)
+            reg3 = r'<a href=".*?" title=".*?" class=".*?">'
+            permenentlist = re.findall(reg3,html)
+            for each in permenentlist:
+                detailed_urls_list.append(each.split('"')[1])
+        except:
+            print('Faile')
+            continue
+    return detailed_urls_list
+
+
+# In[105]:
+
+
+def get_what_you_want(detailed_urls_list):
+    jpg_list = []
+    for url in detailed_urls_list:
+        try:
+            html = gethtmls(url)
+            soup = BeautifulSoup(html,'lxml')
+            l1 = soup.find_all('img',class_ = re.compile("alignnone size-full .*?"))
+            for i in range(len(l1)):
+                jpg_list.append(l1[i].attrs['src'])
+        except:
+            continue
+    return jpg_list
+
+
+# In[110]:
+
+
+def downloadfunction(jpglist):
+    root = 'E:\学习\爬虫\default\爬虫\吹牛逼练习\流鼻血了\\'
+    for each in jpglist:
+        path = root + each.split('/')[-1] + '.jpg'
+        urlretrieve(each,path)
+        print('Save')
+
+# In[111]:
+
+
+def main():
+    preview_urls_list = get_preview_list()
+    print('Step1 finished')
+    detailed_urls_list = getdetailedurls(preview_urls_list)
+    print('Step2 finished')
+    jpglist = get_what_you_want(detailed_urls_list)
+    print('Step3  finished')
+    downloadfunction(jpglist)
+
+if __name__ == '__main__':
+    main()
