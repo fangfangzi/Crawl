@@ -1,0 +1,60 @@
+
+# coding: utf-8
+
+# In[1]:
+
+
+import re
+import requests
+
+
+# In[2]:
+
+
+
+
+
+# In[15]:
+
+
+def getjpgs():
+    urls = []
+    namelist = []
+    netlist = []
+    jpglist = []
+    depth = 20
+    for j in range(depth):
+        url = 'https://www.zhainanfulishe.com/nvshen/' + 'page/' + str(j+1)
+        urls.append(url)
+    for url in urls:
+        try:
+            r = requests.get(url)
+            r.encoding = r.apparent_encoding
+            html = r.text
+            reg1 = r'<a href=".*?" title=".*?" class=".*?">'
+            alllist = re.findall(reg1,html)
+            for each in alllist:
+                netlist.append(each.split('"')[1])
+                namelist.append(each.split('"')[3])
+            reg2 = r'<img src=".*?" alt=".*?">'
+            permelentlist = re.findall(reg2,html)
+            for each in permelentlist:
+                jpglist.append(each.split('"')[1])
+
+            i = 0
+            for each_jpg in jpglist:
+                try:        
+                    r1 = requests.get(each_jpg)
+                    root = 'E:\学习\爬虫\default\爬虫\吹牛逼练习\女神图片\女神图片' 
+                    path =  root + namelist[i] + '.jpg'
+                    i = i+1
+                    with open(path,'wb') as f:
+                        f.write(r1.content)
+                        print('Save',i)
+                except:
+                    continue
+        except:
+            continue
+
+if __name__ == '__main__':
+    getjpgs()
